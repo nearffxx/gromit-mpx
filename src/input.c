@@ -322,6 +322,7 @@ void toggle_grab (GromitData *data,
     g_hash_table_lookup(data->devdatatable, dev);
   if(devdata)
     {
+      clear_screen (data);
       if(devdata->is_grabbed)
         release_grab (data, devdata->device);
       else
