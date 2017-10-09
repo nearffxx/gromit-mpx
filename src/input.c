@@ -37,13 +37,13 @@ void setup_input_devices (GromitData *data)
 
 
   /* ungrab all */
-  release_grab (data, NULL); 
+  release_grab (data, NULL);
 
   /* and clear our own device data list */
   GHashTableIter it;
   gpointer value;
   g_hash_table_iter_init (&it, data->devdatatable);
-  while (g_hash_table_iter_next (&it, NULL, &value)) 
+  while (g_hash_table_iter_next (&it, NULL, &value))
     g_free(value);
   g_hash_table_remove_all(data->devdatatable);
 
@@ -60,7 +60,7 @@ void setup_input_devices (GromitData *data)
   for(d = devices; d; d = d->next)
     {
       GdkDevice *device = (GdkDevice *) d->data;
-    
+
       /* only enable devices with 2 ore more axes */
       if (gdk_device_get_source(device) != GDK_SOURCE_KEYBOARD && gdk_device_get_n_axes(device) >= 2)
         {
@@ -72,90 +72,90 @@ void setup_input_devices (GromitData *data)
           devdata->device = device;
           devdata->index = i;
 
-	  /* get attached keyboard and grab the hotkey */
-	  if (!data->hot_keycode || !data->undo_keycode)
-	    {
-	      g_printerr("ERROR: Grabbing hotkey from attached keyboard "
+          /* get attached keyboard and grab the hotkey */
+          if (!data->hot_keycode || !data->undo_keycode)
+            {
+              g_printerr("ERROR: Grabbing hotkey from attached keyboard "
                          "of '%s' failed, no hotkeys defined.\n",
-			 gdk_device_get_name(device));
-	      g_free(devdata);
-	      continue;
-	    }
+                         gdk_device_get_name(device));
+              g_free(devdata);
+              continue;
+            }
 
           /* if this is a slave device, we need the master */
           GdkDevice *kdevice=device;
           if(gdk_device_get_device_type (device) == GDK_DEVICE_TYPE_SLAVE)
             kdevice=gdk_device_get_associated_device (device);
 
-	  if (GDK_IS_X11_DISPLAY(data->display)) {
-	      gint dev_id = -1;
-	      g_object_get(kdevice, "device-id", &dev_id, NULL);
-	      
-	      gint kbd_dev_id = -1;
-	      XIDeviceInfo* devinfo;
-	      int devicecount = 0;
-	      
-	      devinfo = XIQueryDevice(GDK_DISPLAY_XDISPLAY(data->display),
-				      dev_id,
-				      &devicecount);
-	      if(devicecount)
-		  kbd_dev_id = devinfo->attachment;
-	      XIFreeDeviceInfo(devinfo);
- 
-	      if(kbd_dev_id != -1)
-		  {
-		      if(data->debug)
-			  g_printerr("DEBUG: Grabbing hotkeys from keyboard '%d' .\n", kbd_dev_id);
+          if (GDK_IS_X11_DISPLAY(data->display)) {
+              gint dev_id = -1;
+              g_object_get(kdevice, "device-id", &dev_id, NULL);
 
-		      XIEventMask mask;
-		      unsigned char bits[4] = {0,0,0,0};
-		      mask.mask = bits;
-		      mask.mask_len = sizeof(bits);
-	      
-		      XISetMask(bits, XI_KeyPress);
-		      XISetMask(bits, XI_KeyRelease);
-	      
-		      XIGrabModifiers modifiers[] = {{XIAnyModifier, 0}};
-		      int nmods = 1;
-	      
-		      gdk_error_trap_push ();
-	      
-		      XIGrabKeycode( GDK_DISPLAY_XDISPLAY(data->display),
-				     kbd_dev_id,
-				     data->hot_keycode,
-				     GDK_WINDOW_XID(data->root),
-				     GrabModeAsync,
-				     GrabModeAsync,
-				     True,
-				     &mask,
-				     nmods,
-				     modifiers);
+              gint kbd_dev_id = -1;
+              XIDeviceInfo* devinfo;
+              int devicecount = 0;
 
-		      XIGrabKeycode( GDK_DISPLAY_XDISPLAY(data->display),
-				     kbd_dev_id,
-				     data->undo_keycode,
-				     GDK_WINDOW_XID(data->root),
-				     GrabModeAsync,
-				     GrabModeAsync,
-				     True,
-				     &mask,
-				     nmods,
-				     modifiers);
+              devinfo = XIQueryDevice(GDK_DISPLAY_XDISPLAY(data->display),
+                                      dev_id,
+                                      &devicecount);
+              if(devicecount)
+                  kbd_dev_id = devinfo->attachment;
+              XIFreeDeviceInfo(devinfo);
 
-		      XSync(GDK_DISPLAY_XDISPLAY(data->display), False);
-		      if(gdk_error_trap_pop())
-			  {
-			      g_printerr("ERROR: Grabbing hotkey from keyboard device %d failed.\n",
-					 kbd_dev_id);
-			      g_free(devdata);
-			      continue;
-			  }
-		  }
-	  } // GDK_IS_X11_DISPLAY()
-	      
-	  g_hash_table_insert(data->devdatatable, device, devdata);
-          g_printerr ("Enabled Device %d: \"%s\", (Type: %d)\n", 
-		      i++, gdk_device_get_name(device), gdk_device_get_source(device));
+              if(kbd_dev_id != -1)
+                  {
+                      if(data->debug)
+                          g_printerr("DEBUG: Grabbing hotkeys from keyboard '%d' .\n", kbd_dev_id);
+
+                      XIEventMask mask;
+                      unsigned char bits[4] = {0,0,0,0};
+                      mask.mask = bits;
+                      mask.mask_len = sizeof(bits);
+
+                      XISetMask(bits, XI_KeyPress);
+                      XISetMask(bits, XI_KeyRelease);
+
+                      XIGrabModifiers modifiers[] = {{XIAnyModifier, 0}};
+                      int nmods = 1;
+
+                      gdk_error_trap_push ();
+
+                      XIGrabKeycode( GDK_DISPLAY_XDISPLAY(data->display),
+                                     kbd_dev_id,
+                                     data->hot_keycode,
+                                     GDK_WINDOW_XID(data->root),
+                                     GrabModeAsync,
+                                     GrabModeAsync,
+                                     True,
+                                     &mask,
+                                     nmods,
+                                     modifiers);
+
+                      XIGrabKeycode( GDK_DISPLAY_XDISPLAY(data->display),
+                                     kbd_dev_id,
+                                     data->undo_keycode,
+                                     GDK_WINDOW_XID(data->root),
+                                     GrabModeAsync,
+                                     GrabModeAsync,
+                                     True,
+                                     &mask,
+                                     nmods,
+                                     modifiers);
+
+                      XSync(GDK_DISPLAY_XDISPLAY(data->display), False);
+                      if(gdk_error_trap_pop())
+                          {
+                              g_printerr("ERROR: Grabbing hotkey from keyboard device %d failed.\n",
+                                         kbd_dev_id);
+                              g_free(devdata);
+                              continue;
+                          }
+                  }
+          } // GDK_IS_X11_DISPLAY()
+
+          g_hash_table_insert(data->devdatatable, device, devdata);
+          g_printerr ("Enabled Device %d: \"%s\", (Type: %d)\n",
+                      i++, gdk_device_get_name(device), gdk_device_get_source(device));
         }
     }
 
@@ -164,32 +164,32 @@ void setup_input_devices (GromitData *data)
 
 
 
-void release_grab (GromitData *data, 
-		   GdkDevice *dev)
+void release_grab (GromitData *data,
+                   GdkDevice *dev)
 {
   if(!dev) /* this means release all grabs */
     {
       GHashTableIter it;
       gpointer value;
-      GromitDeviceData* devdata; 
+      GromitDeviceData* devdata;
       g_hash_table_iter_init (&it, data->devdatatable);
-      while (g_hash_table_iter_next (&it, NULL, &value)) 
+      while (g_hash_table_iter_next (&it, NULL, &value))
         {
           devdata = value;
           if(devdata->is_grabbed)
-	  {
-	    gdk_error_trap_push();
-	    gdk_device_ungrab(devdata->device, GDK_CURRENT_TIME);
-	    XSync(GDK_DISPLAY_XDISPLAY(data->display), False);
-	    if(gdk_error_trap_pop())
-	      g_printerr("WARNING: Ungrabbing device '%s' failed.\n", gdk_device_get_name(devdata->device));
+          {
+            gdk_error_trap_push();
+            gdk_device_ungrab(devdata->device, GDK_CURRENT_TIME);
+            XSync(GDK_DISPLAY_XDISPLAY(data->display), False);
+            if(gdk_error_trap_pop())
+              g_printerr("WARNING: Ungrabbing device '%s' failed.\n", gdk_device_get_name(devdata->device));
 
-	    devdata->is_grabbed = 0;
+            devdata->is_grabbed = 0;
             /* workaround buggy GTK3 ? */
-	    devdata->motion_time = 0;
-	  }
+            devdata->motion_time = 0;
+          }
         }
-      
+
       data->all_grabbed = 0;
 
       if(data->debug)
@@ -219,8 +219,8 @@ void release_grab (GromitData *data,
 }
 
 
-void acquire_grab (GromitData *data, 
-		   GdkDevice *dev)
+void acquire_grab (GromitData *data,
+                   GdkDevice *dev)
 {
   show_window (data);
 
@@ -228,38 +228,38 @@ void acquire_grab (GromitData *data,
     {
       GHashTableIter it;
       gpointer value;
-      GromitDeviceData* devdata = NULL; 
+      GromitDeviceData* devdata = NULL;
       g_hash_table_iter_init (&it, data->devdatatable);
-      while (g_hash_table_iter_next (&it, NULL, &value)) 
+      while (g_hash_table_iter_next (&it, NULL, &value))
         {
           GdkCursor *cursor;
 
-	  devdata = value;
+          devdata = value;
           if(devdata->is_grabbed || gdk_device_get_device_type(devdata->device) == GDK_DEVICE_TYPE_SLAVE)
             continue;
 
-	  if(devdata->cur_context && devdata->cur_context->type == GROMIT_ERASER)
-	    cursor = data->erase_cursor; 
-	  else
-	    cursor = data->paint_cursor; 
+          if(devdata->cur_context && devdata->cur_context->type == GROMIT_ERASER)
+            cursor = data->erase_cursor;
+          else
+            cursor = data->paint_cursor;
 
-	
-	  if(gdk_device_grab(devdata->device,
-			     gtk_widget_get_window(data->win),
-			     GDK_OWNERSHIP_NONE,
-			     FALSE,
-			     GROMIT_MOUSE_EVENTS,
-			     cursor,
-			     GDK_CURRENT_TIME) != GDK_GRAB_SUCCESS)
-	    {
-	      /* this probably means the device table is outdated, 
-		 e.g. this device doesn't exist anymore */
-	      g_printerr("Error grabbing Device '%s' while grabbing all, ignoring.\n", 
-			 gdk_device_get_name(devdata->device));
-	      continue;
 
-	    }
-	   
+          if(gdk_device_grab(devdata->device,
+                             gtk_widget_get_window(data->win),
+                             GDK_OWNERSHIP_NONE,
+                             FALSE,
+                             GROMIT_MOUSE_EVENTS,
+                             cursor,
+                             GDK_CURRENT_TIME) != GDK_GRAB_SUCCESS)
+            {
+              /* this probably means the device table is outdated,
+                 e.g. this device doesn't exist anymore */
+              g_printerr("Error grabbing Device '%s' while grabbing all, ignoring.\n",
+                         gdk_device_get_name(devdata->device));
+              continue;
+
+            }
+
           devdata->is_grabbed = 1;
         }
 
@@ -267,7 +267,7 @@ void acquire_grab (GromitData *data,
 
       if(data->debug)
         g_printerr("DEBUG: Grabbed all Devices.\n");
-      
+
       return;
     }
 
@@ -277,10 +277,10 @@ void acquire_grab (GromitData *data,
     {
       GdkCursor *cursor;
       if(devdata->cur_context && devdata->cur_context->type == GROMIT_ERASER)
-        cursor = data->erase_cursor; 
+        cursor = data->erase_cursor;
       else
-        cursor = data->paint_cursor; 
-      
+        cursor = data->paint_cursor;
+
       if(gdk_device_grab(devdata->device,
                          gtk_widget_get_window(data->win),
                          GDK_OWNERSHIP_NONE,
@@ -291,14 +291,14 @@ void acquire_grab (GromitData *data,
         {
           /* this probably means the device table is outdated,
              e.g. this device doesn't exist anymore */
-          g_printerr("Error grabbing device '%s', rescanning device list.\n", 
+          g_printerr("Error grabbing device '%s', rescanning device list.\n",
                      gdk_device_get_name(devdata->device));
           setup_input_devices(data);
           return;
         }
 
       devdata->is_grabbed = 1;
-      
+
       if(data->debug)
         g_printerr("DEBUG: Grabbed Device '%s'.\n", gdk_device_get_name(devdata->device));
     }
@@ -306,15 +306,15 @@ void acquire_grab (GromitData *data,
 }
 
 
-void toggle_grab (GromitData *data, 
-		  GdkDevice* dev)
+void toggle_grab (GromitData *data,
+                  GdkDevice* dev)
 {
   if(dev == NULL) /* toggle all */
     {
       if (data->all_grabbed)
-	release_grab (data, NULL);
+        release_grab (data, NULL);
       else
-	acquire_grab (data, NULL);
+        acquire_grab (data, NULL);
       return;
     }
 
@@ -335,8 +335,8 @@ void toggle_grab (GromitData *data,
 
 /* Key snooper */
 gint snoop_key_press(GtkWidget   *grab_widget,
-		     GdkEventKey *event,
-		     gpointer     func_data)
+                     GdkEventKey *event,
+                     gpointer     func_data)
 {
   GromitData *data = (GromitData *) func_data;
   GdkDevice *dev = gdk_event_get_device((GdkEvent*)event);
@@ -345,7 +345,7 @@ gint snoop_key_press(GtkWidget   *grab_widget,
       event->hardware_keycode == data->hot_keycode)
     {
       if(data->debug)
-	g_printerr("DEBUG: Received hotkey press from device '%s'\n", gdk_device_get_name(dev));
+        g_printerr("DEBUG: Received hotkey press from device '%s'\n", gdk_device_get_name(dev));
 
       if (event->state & GDK_SHIFT_MASK)
         clear_screen (data);
@@ -354,7 +354,7 @@ gint snoop_key_press(GtkWidget   *grab_widget,
       else if (event->state & GDK_MOD1_MASK)
         gtk_main_quit ();
       else
-	  toggle_grab(data, gdk_device_get_associated_device(dev));
+          toggle_grab(data, gdk_device_get_associated_device(dev));
 
       return TRUE;
     }
@@ -362,7 +362,7 @@ gint snoop_key_press(GtkWidget   *grab_widget,
       event->hardware_keycode == data->undo_keycode)
     {
       if(data->debug)
-	g_printerr("DEBUG: Received undokey press from device '%s'\n", gdk_device_get_name(dev));
+        g_printerr("DEBUG: Received undokey press from device '%s'\n", gdk_device_get_name(dev));
 
       if (data->hidden)
         return FALSE;
